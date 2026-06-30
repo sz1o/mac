@@ -1,0 +1,698 @@
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-tertiary: rgba(255, 255, 255, 0.38);
+  --accent: #5b8fff;
+  --discord-purple: #5865f2;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --blur: blur(28px) saturate(180%);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Orbit sizing — change these to scale everything.
+     Radius/icon-size are tuned for 18 orbiting icons —
+     if you add/remove icons, bump --orbit-radius so
+     (2 * PI * radius) / num-icons stays comfortably
+     bigger than --icon-size or they'll start overlapping. */
+  --orbit-radius: 165px;
+  --logo-size: 120px;
+  --icon-size: 42px;
+  --num-icons: 18;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: #000;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   SPLASH SCREEN
+   ============================================================ */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), visibility 0.8s;
+}
+
+#splash.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+#splash-logo {
+  font-size: 88px;
+  color: #000;
+  animation: splashPulse 1.8s ease-in-out infinite;
+  line-height: 1;
+}
+
+@keyframes splashPulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.04); opacity: 0.85; }
+}
+
+#splash-bar-wrap {
+  width: 180px;
+  height: 3px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+#splash-bar {
+  height: 100%;
+  width: 0%;
+  background: #000;
+  border-radius: 99px;
+  animation: splashLoad 2.6s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+@keyframes splashLoad {
+  0%   { width: 0%; }
+  40%  { width: 55%; }
+  80%  { width: 88%; }
+  100% { width: 100%; }
+}
+
+/* ============================================================
+   SITE WRAPPER
+   ============================================================ */
+#site { opacity: 0; transition: opacity 0.9s ease; }
+#site.hidden  { display: none; }
+#site.visible { display: block; opacity: 1; }
+
+/* ============================================================
+   SCROLL HINT — points DOWN
+   ============================================================ */
+#scroll-hint {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  animation: hintBob 2s ease-in-out infinite;
+}
+
+#scroll-hint i {
+  font-size: 20px;
+}
+
+#scroll-hint.hidden { opacity: 0; }
+
+@keyframes hintBob {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(7px); }
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+#hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#bg-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('../background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(1.06);
+  animation: bgDrift 18s ease-in-out infinite alternate;
+}
+
+@keyframes bgDrift {
+  0%   { transform: scale(1.06) translate(0,0); }
+  100% { transform: scale(1.06) translate(-12px,-8px); }
+}
+
+#bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.32) 0%,
+    rgba(0,0,0,0.18) 40%,
+    rgba(0,0,0,0.6) 100%
+  );
+}
+
+#hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+/* ============================================================
+   LOGO + ORBIT SYSTEM
+   ============================================================ */
+#logo-orbit-wrap {
+  position: relative;
+  width: calc(var(--orbit-radius) * 2 + var(--icon-size));
+  height: calc(var(--orbit-radius) * 2 + var(--icon-size));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Entrance: shrink then pop to normal */
+  animation: logoPop 1.1s cubic-bezier(0.34,1.56,0.64,1) both;
+  animation-delay: 0.3s;
+}
+
+@keyframes logoPop {
+  0%   { opacity:0; transform: scale(0.6); }
+  60%  { opacity:1; transform: scale(0.82); }
+  80%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* The PFP image itself */
+#logo-wrap {
+  position: relative;
+  z-index: 2;
+  /* gentle continuous bob */
+  animation: logoBob 5s ease-in-out infinite;
+  animation-delay: 1.4s;
+}
+
+@keyframes logoBob {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+
+#site-logo {
+  width: var(--logo-size);
+  height: var(--logo-size);
+  object-fit: contain;      /* keeps the Finder icon shape, no crop */
+  border-radius: 24px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.16),
+    0 10px 40px rgba(0,0,0,0.7),
+    0 2px 8px rgba(255,255,255,0.06) inset;
+  background: transparent;  /* no background — just the logo */
+}
+
+/* ============================================================
+   ORBIT RING
+   ============================================================ */
+.orbit-ring {
+  position: absolute;
+  inset: 0;
+  /* spin the whole ring */
+  animation: orbitSpin 12s linear infinite;
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Each icon is placed around the circle via CSS custom property --i.
+   This element ONLY handles position (placement angle + distance from
+   center) — it does not touch the icon's own visual rotation. Because
+   the ring (.orbit-ring) spins as a whole, every icon naturally orbits
+   with it; this transform never changes after load. */
+.orbit-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--icon-size);
+  height: var(--icon-size);
+
+  /* Place on circle: rotate to this icon's angle, push out by radius,
+     then re-center the icon box on that point. */
+  transform:
+    rotate(calc(360deg / var(--num-icons) * var(--i)))
+    translateY(calc(-1 * var(--orbit-radius)))
+    translateX(calc(-1 * var(--icon-size) / 2))
+    translateY(calc(-1 * var(--icon-size) / 2));
+}
+
+/* Inner wrapper cancels BOTH rotations the icon would otherwise
+   inherit: (1) its own placement angle around the circle, and
+   (2) the ring's continuous spin — so every icon, at every position,
+   stays perfectly upright and right-side-facing at all times. */
+.orbit-icon-inner {
+  width: 100%;
+  height: 100%;
+  animation: counterSpin 12s linear infinite;
+  /* cancels this icon's fixed placement angle from .orbit-icon above */
+  transform: rotate(calc(-360deg / var(--num-icons) * var(--i)));
+}
+
+@keyframes counterSpin {
+  from { transform: rotate(calc(-360deg / var(--num-icons) * var(--i))) rotate(0deg); }
+  to   { transform: rotate(calc(-360deg / var(--num-icons) * var(--i))) rotate(-360deg); }
+}
+
+/* Glass pill for each orbit icon */
+.orbit-icon-inner i,
+.orbit-icon-inner img {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: rgba(255,255,255,0.85);
+
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06) inset,
+    0 6px 20px rgba(0,0,0,0.4);
+
+  /* Each icon fades in with a stagger, timed off --i so it
+     always lines up correctly no matter how many icons there are */
+  opacity: 0;
+  animation: iconFadeIn 0.4s ease forwards;
+  animation-delay: calc(1.1s + var(--i) * 0.07s);
+}
+
+/* Real PNG/WEBP logos need object-fit so they scale to fit
+   the glass pill instead of stretching to fill it */
+.orbit-icon-inner img {
+  object-fit: contain;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+@keyframes iconFadeIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   HERO TITLE
+   ============================================================ */
+#hero-title {
+  font-size: clamp(80px,16vw,160px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0.55) 40%,
+    rgba(255,255,255,0.85) 70%,
+    rgba(255,255,255,0.35) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 40px rgba(255,255,255,0.2));
+  animation: titleReveal 1s cubic-bezier(0.34,1.2,0.64,1) both;
+  animation-delay: 0.6s;
+}
+
+@keyframes titleReveal {
+  0%   { opacity:0; transform:translateY(30px); filter:blur(12px) drop-shadow(0 0 0 transparent); }
+  100% { opacity:1; transform:translateY(0);    filter:blur(0) drop-shadow(0 0 40px rgba(255,255,255,0.2)); }
+}
+
+/* ============================================================
+   DISCORD BUTTON
+   ============================================================ */
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-radius: 99px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--text-primary);
+  background: rgba(88,101,242,0.28);
+  border: 1px solid rgba(88,101,242,0.55);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08) inset,
+    0 8px 32px rgba(88,101,242,0.25),
+    0 2px 8px rgba(0,0,0,0.4);
+  transition:
+    transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+  animation: btnReveal 0.9s cubic-bezier(0.34,1.2,0.64,1) both;
+  animation-delay: 0.95s;
+}
+
+@keyframes btnReveal {
+  0%   { opacity:0; transform:translateY(20px); }
+  100% { opacity:1; transform:translateY(0); }
+}
+
+.glass-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  background: rgba(88,101,242,0.44);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.14) inset,
+    0 12px 48px rgba(88,101,242,0.45),
+    0 2px 8px rgba(0,0,0,0.4);
+}
+
+.glass-btn:active { transform: translateY(0) scale(0.98); }
+
+.glass-btn .fa-discord { font-size: 20px; }
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.section { padding: 100px 24px; }
+
+.section-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: clamp(36px,6vw,54px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.section-sub {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 52px;
+  font-weight: 400;
+}
+
+/* ============================================================
+   GLASS CARD BASE
+   ============================================================ */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 20px 60px rgba(0,0,0,0.5),
+    0 2px 12px rgba(255,255,255,0.04) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 16px; right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,0.28),transparent);
+}
+
+/* ============================================================
+   ABOUT SECTION
+   ============================================================ */
+#about {
+  background: linear-gradient(180deg,rgba(0,0,0,0.85) 0%,rgba(10,10,18,0.92) 100%);
+}
+
+.about-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 32px 36px;
+  margin-bottom: 20px;
+  transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.3s ease;
+}
+
+.about-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.1) inset,
+    0 28px 80px rgba(0,0,0,0.55);
+}
+
+.about-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--text-secondary);
+}
+
+.about-icon.mac-icon { font-size: 36px; color: rgba(255,255,255,0.8); }
+
+.lua-gif {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.about-text h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.about-text p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.about-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ============================================================
+   SCRIPTS SECTION
+   ============================================================ */
+#scripts {
+  background: linear-gradient(180deg,rgba(10,10,18,0.92) 0%,rgba(0,0,0,0.97) 100%);
+}
+
+#script-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px,1fr));
+  gap: 20px;
+}
+
+.script-box {
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.3s ease;
+}
+
+.script-box:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px rgba(91,143,255,0.2) inset,
+    0 28px 80px rgba(0,0,0,0.6),
+    0 0 32px rgba(91,143,255,0.06);
+}
+
+.script-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+}
+
+.script-num {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.script-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.copy-btn:hover {
+  background: rgba(91,143,255,0.18);
+  border-color: rgba(91,143,255,0.4);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.copy-btn.copied {
+  background: rgba(52,199,89,0.2);
+  border-color: rgba(52,199,89,0.4);
+  color: #34c759;
+}
+
+.script-box pre {
+  padding: 20px;
+  margin: 0;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.72);
+  font-family: 'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.script-box pre::-webkit-scrollbar { height: 4px; }
+.script-box pre::-webkit-scrollbar-track { background: transparent; }
+.script-box pre::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+#footer {
+  background: rgba(0,0,0,0.97);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+#footer p { font-size: 13px; color: var(--text-tertiary); }
+
+.footer-discord {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-discord:hover { color: #fff; }
+
+/* ============================================================
+   SCROLL REVEAL
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.7s cubic-bezier(0.4,0,0.2,1),
+    transform 0.7s cubic-bezier(0.34,1.2,0.64,1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal:nth-child(2) { transition-delay: 0.1s; }
+.reveal:nth-child(3) { transition-delay: 0.18s; }
+.reveal:nth-child(4) { transition-delay: 0.26s; }
+.reveal:nth-child(5) { transition-delay: 0.34s; }
+.reveal:nth-child(6) { transition-delay: 0.42s; }
+.reveal:nth-child(7) { transition-delay: 0.5s; }
+.reveal:nth-child(8) { transition-delay: 0.58s; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 680px) {
+  :root {
+    --orbit-radius: 100px;
+    --logo-size: 96px;
+    --icon-size: 27px;
+  }
+
+  #script-grid { grid-template-columns: 1fr; }
+
+  .about-card {
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+  }
+
+  .section { padding: 72px 16px; }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
